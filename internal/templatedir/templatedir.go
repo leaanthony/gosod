@@ -51,15 +51,13 @@ func (t *TemplateDir) Extract(targetDirectory string, data interface{}) error {
 		return err
 	}
 
-	// If the targetDirectory exists then abort
-	if _, err := os.Stat(targetDirectory); os.IsNotExist(err) == false {
-		return errors.New("Path " + targetDirectory + " already exists")
-	}
-
-	// Create the targetDirectory
-	err = os.MkdirAll(targetDirectory, 0755)
-	if err != nil {
-		return err
+	// If the targetDirectory doesn't exist, then create it
+	if _, err := os.Stat(targetDirectory); os.IsNotExist(err) == true {
+		// Create the targetDirectory
+		err = os.MkdirAll(targetDirectory, 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Process the template files
