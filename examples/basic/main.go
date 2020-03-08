@@ -1,18 +1,3 @@
-# gosod
-
-An application scaffold library.
-
-## Installation 
-
-`go get github.com/leaanthony/gosod`
-
-## Usage
-
-  1. Define a template directory
-  2. Define some data
-  3. Extract to a target directory
-
-```
 package main
 
 import (
@@ -44,4 +29,3 @@ func main() {
 		log.Fatal(err)
 	}
 }
-```
