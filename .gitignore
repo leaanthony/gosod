@@ -12,3 +12,5 @@
 *.out
 
 generated
+examples/ignore/ignore
+examples/basic/basic
