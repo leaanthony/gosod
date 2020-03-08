@@ -19,6 +19,7 @@ type TemplateDir struct {
 	dirs           []string
 	standardFiles  []string
 	templateFiles  []string
+	ignoredFiles   map[string]struct{}
 }
 
 // New attempts to create a new TemplateDir from the given path
@@ -39,8 +40,15 @@ func New(directoryPath string) (*TemplateDir, error) {
 	return &TemplateDir{
 		path:           path,
 		templateFilter: ".tmpl",
+		ignoredFiles:   make(map[string]struct{}),
 	}, nil
 
+}
+
+// IgnoreFilename will add the given filename to the list of files to ignore
+// during extraction
+func (t *TemplateDir) IgnoreFilename(filename string) {
+	t.ignoredFiles[filename] = struct{}{}
 }
 
 // Extract the templates to the given directory, using data as input
@@ -120,8 +128,16 @@ func (t *TemplateDir) categoriseFile(path string, info os.FileInfo, err error) e
 		return nil
 	}
 
-	// Is it a template?
+	// Get the filename
 	filename := filepath.Base(path)
+
+	// Is it a file we are ignoring?
+	_, ignored := t.ignoredFiles[filename]
+	if ignored {
+		return nil
+	}
+
+	// Is it a template?
 	if strings.Index(filename, t.templateFilter) > -1 {
 		t.templateFiles = append(t.templateFiles, path)
 		return nil
