@@ -4,9 +4,7 @@ import (
 	"errors"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"syscall"
 	"text/template"
@@ -22,15 +20,8 @@ type TemplateDir struct {
 	ignoredFiles   map[string]struct{}
 }
 
-// New attempts to create a new TemplateDir from the given path
-func New(directoryPath string) (*TemplateDir, error) {
-
-	// Check path exists
-	_, filename, _, _ := runtime.Caller(2)
-	path, err := filepath.Abs(filepath.Join(path.Dir(filename), directoryPath))
-	if err != nil {
-		return nil, err
-	}
+// New attempts to create a new TemplateDir from the given (absolute) path
+func New(path string) (*TemplateDir, error) {
 
 	// If the path does not exist then return an error
 	if _, err := os.Stat(path); os.IsNotExist(err) {
