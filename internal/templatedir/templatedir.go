@@ -12,12 +12,12 @@ import (
 
 // TemplateDir defines a directory containing directories and files, including template files
 type TemplateDir struct {
-	path           string
-	templateFilter string
-	dirs           []string
-	standardFiles  []string
-	templateFiles  []string
-	ignoredFiles   map[string]struct{}
+	path            string
+	templateFilters []string
+	dirs            []string
+	standardFiles   []string
+	templateFiles   []string
+	ignoredFiles    map[string]struct{}
 }
 
 // New attempts to create a new TemplateDir from the given (absolute) path
@@ -29,9 +29,9 @@ func New(path string) (*TemplateDir, error) {
 	}
 
 	return &TemplateDir{
-		path:           path,
-		templateFilter: ".tmpl",
-		ignoredFiles:   make(map[string]struct{}),
+		path:            path,
+		templateFilters: []string{".tmpl"},
+		ignoredFiles:    make(map[string]struct{}),
 	}, nil
 
 }
@@ -40,6 +40,12 @@ func New(path string) (*TemplateDir, error) {
 // during extraction
 func (t *TemplateDir) IgnoreFilename(filename string) {
 	t.ignoredFiles[filename] = struct{}{}
+}
+
+// SetTemplateFilters sets the template filter. Each filename is checked to see if
+// it contains this string and if so, it is deemed to be a template file
+func (t *TemplateDir) SetTemplateFilters(filters []string) {
+	t.templateFilters = filters
 }
 
 // Extract the templates to the given directory, using data as input
@@ -127,9 +133,11 @@ func (t *TemplateDir) categoriseFile(path string, info os.FileInfo, err error) e
 	}
 
 	// Is it a template?
-	if strings.Index(filename, t.templateFilter) > -1 {
-		t.templateFiles = append(t.templateFiles, path)
-		return nil
+	for _, filter := range t.templateFilters {
+		if strings.Index(filename, filter) > -1 {
+			t.templateFiles = append(t.templateFiles, path)
+			return nil
+		}
 	}
 
 	// Treat as standard file
@@ -179,7 +187,9 @@ func (t *TemplateDir) processTemplateDirs(targetDirectory string, data interface
 		// update filename
 		baseDir := filepath.Dir(targetFile)
 		filename := filepath.Base(targetFile)
-		filename = strings.ReplaceAll(filename, t.templateFilter, "")
+		for _, filter := range t.templateFilters {
+			filename = strings.ReplaceAll(filename, filter, "")
+		}
 		targetFile = filepath.Join(baseDir, filename)
 
 		// Create target file
