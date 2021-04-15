@@ -1,6 +1,6 @@
 # gosod
 
-An application scaffold library.
+Templating simplified.
 
 ## Installation 
 
