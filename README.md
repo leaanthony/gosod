@@ -29,7 +29,7 @@ Features:
   2. Define some data
   3. Extract to a target directory
 
-```
+```go
 package main
 
 import (
@@ -100,3 +100,7 @@ A template directory is simply a directory structure contianing files you wish t
 Template files, by default, are any file with ".tmpl" in their filename. To change this, use `SetTemplateFilters([]string)`. This allows you to set any number of filters.
 
 Files may also be ignored by using the `IgnoreFilename(string)` method.
+
+## What's with the name?
+
+Google is your [friend](https://translate.google.com/?sl=cy&tl=en&text=gosod&op=translate)
