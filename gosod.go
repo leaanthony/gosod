@@ -1,8 +1,11 @@
 package gosod
 
-import "github.com/leaanthony/gosod/internal/templatedir"
+import (
+	"github.com/leaanthony/gosod/internal/templatedir"
+	"io/fs"
+)
 
-// TemplateDir creates a new TemplateDir structure for the given directoryPath
-func TemplateDir(directoryPath string) (*templatedir.TemplateDir, error) {
-	return templatedir.New(directoryPath)
+// New creates a new TemplateDir structure for the given filesystem
+func New(fs fs.FS) *templatedir.TemplateDir {
+	return templatedir.New(fs)
 }

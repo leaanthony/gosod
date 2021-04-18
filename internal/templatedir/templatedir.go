@@ -1,8 +1,9 @@
 package templatedir
 
 import (
-	"errors"
 	"io"
+	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 // TemplateDir defines a directory containing directories and files, including template files
 type TemplateDir struct {
-	path            string
+	fs              fs.FS
 	templateFilters []string
 	dirs            []string
 	standardFiles   []string
@@ -20,25 +21,20 @@ type TemplateDir struct {
 	ignoredFiles    map[string]struct{}
 }
 
-// New attempts to create a new TemplateDir from the given (absolute) path
-func New(path string) (*TemplateDir, error) {
-
-	// If the path does not exist then return an error
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return nil, errors.New("Path " + path + " does not exist")
-	}
+// New attempts to create a new TemplateDir from the given FS
+func New(fs fs.FS) *TemplateDir {
 
 	return &TemplateDir{
-		path:            path,
+		fs:              fs,
 		templateFilters: []string{".tmpl"},
 		ignoredFiles:    make(map[string]struct{}),
-	}, nil
+	}
 
 }
 
-// IgnoreFilename will add the given filename to the list of files to ignore
+// IgnoreFile will add the given filename to the list of files to ignore
 // during extraction
-func (t *TemplateDir) IgnoreFilename(filename string) {
+func (t *TemplateDir) IgnoreFile(filename string) {
 	t.ignoredFiles[filename] = struct{}{}
 }
 
@@ -104,10 +100,10 @@ func (t *TemplateDir) processTemplateDirFiles(targetDirectory string, data inter
 }
 
 func (t *TemplateDir) categoriseFiles() error {
-	return filepath.Walk(t.path, t.categoriseFile)
+	return fs.WalkDir(t.fs, ".", t.categoriseFile)
 }
 
-func (t *TemplateDir) categoriseFile(path string, info os.FileInfo, err error) error {
+func (t *TemplateDir) categoriseFile(path string, info fs.DirEntry, err error) error {
 
 	// Process error
 	if err != nil {
@@ -117,7 +113,7 @@ func (t *TemplateDir) categoriseFile(path string, info os.FileInfo, err error) e
 	// Is it a directory?
 	if info.IsDir() {
 		// Ignore base dir
-		if path != t.path {
+		if path != "." {
 			t.dirs = append(t.dirs, path)
 		}
 		return nil
@@ -146,9 +142,7 @@ func (t *TemplateDir) categoriseFile(path string, info os.FileInfo, err error) e
 }
 
 func (t *TemplateDir) convertPathTarget(path string, targetDirectory string) string {
-	relativePath := strings.TrimPrefix(path, t.path)
-	result := filepath.Join(targetDirectory, relativePath)
-	return result
+	return filepath.Join(targetDirectory, path)
 }
 
 func (t *TemplateDir) createDirectories(targetDirectory string) error {
@@ -176,7 +170,7 @@ func (t *TemplateDir) processTemplateDirs(targetDirectory string, data interface
 	for _, templateFile := range t.templateFiles {
 
 		// Parse template
-		tmpl, err := template.ParseFiles(templateFile)
+		tmpl, err := template.ParseFS(t.fs, templateFile)
 		if err != nil {
 			return err
 		}
@@ -200,12 +194,18 @@ func (t *TemplateDir) processTemplateDirs(targetDirectory string, data interface
 
 		err = tmpl.Execute(writer, data)
 		if err != nil {
-			writer.Close()
+			err := writer.Close()
+			if err != nil {
+				return err
+			}
 			return err
 		}
 
-		writer.Close()
-
+		err = writer.Close()
+		if err != nil {
+			return err
+		}
+		return err
 	}
 
 	return nil
@@ -227,17 +227,25 @@ func (t *TemplateDir) copyFiles(targetDirectory string) error {
 }
 
 func (t *TemplateDir) copyFile(source, target string) error {
-	s, err := os.Open(source)
+	s, err := t.fs.Open(source)
 	if err != nil {
 		return err
 	}
-	defer s.Close()
+	defer func(s fs.File) {
+		err := s.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(s)
 	d, err := os.Create(target)
 	if err != nil {
 		return err
 	}
 	if _, err := io.Copy(d, s); err != nil {
-		d.Close()
+		err := d.Close()
+		if err != nil {
+			return err
+		}
 		return err
 	}
 	return d.Close()
