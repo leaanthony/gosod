@@ -205,7 +205,6 @@ func (t *TemplateDir) processTemplateDirs(targetDirectory string, data interface
 		if err != nil {
 			return err
 		}
-		return err
 	}
 
 	return nil
