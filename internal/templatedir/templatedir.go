@@ -194,9 +194,9 @@ func (t *TemplateDir) processTemplateDirs(targetDirectory string, data interface
 
 		err = tmpl.Execute(writer, data)
 		if err != nil {
-			err := writer.Close()
-			if err != nil {
-				return err
+			err2 := writer.Close()
+			if err2 != nil {
+				return err2
 			}
 			return err
 		}
