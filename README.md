@@ -16,7 +16,7 @@
 Features:
   - Scaffold out project directories from templates
   - Uses Go's native templating engine
-  - Uses `fs.FS` for input, so it works well with `go:embed`
+  - Uses `fs.FS` for input, so it works well with `go:embed` and [debme](https://github.com/leaanthony/debme)
   - Go alternative to [cookiecutter](https://github.com/cookiecutter/cookiecutter)
 
 ## Installation 
