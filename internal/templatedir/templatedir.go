@@ -19,6 +19,7 @@ type TemplateDir struct {
 	standardFiles   []string
 	templateFiles   []string
 	ignoredFiles    map[string]struct{}
+	renameFiles     map[string]string
 }
 
 // New attempts to create a new TemplateDir from the given FS
@@ -28,6 +29,7 @@ func New(fs fs.FS) *TemplateDir {
 		fs:              fs,
 		templateFilters: []string{".tmpl"},
 		ignoredFiles:    make(map[string]struct{}),
+		renameFiles:     make(map[string]string),
 	}
 
 }
@@ -42,6 +44,10 @@ func (t *TemplateDir) IgnoreFile(filename string) {
 // it contains this string and if so, it is deemed to be a template file
 func (t *TemplateDir) SetTemplateFilters(filters []string) {
 	t.templateFilters = filters
+}
+
+func (t *TemplateDir) RenameFiles(renameFiles map[string]string) {
+	t.renameFiles = renameFiles
 }
 
 // Extract the templates to the given directory, using data as input
@@ -184,6 +190,10 @@ func (t *TemplateDir) processTemplateDirs(targetDirectory string, data interface
 		for _, filter := range t.templateFilters {
 			filename = strings.ReplaceAll(filename, filter, "")
 		}
+		renamedFile := t.renameFiles[filename]
+		if renamedFile != "" {
+			filename = renamedFile
+		}
 		targetFile = filepath.Join(baseDir, filename)
 
 		// Create target file
@@ -214,8 +224,13 @@ func (t *TemplateDir) copyFiles(targetDirectory string) error {
 
 	// Iterate over files
 	for _, filename := range t.standardFiles {
+		targetFile := filename
+		renamedFile := t.renameFiles[filename]
+		if renamedFile != "" {
+			targetFile = renamedFile
+		}
 
-		targetFilename := t.convertPathTarget(filename, targetDirectory)
+		targetFilename := t.convertPathTarget(targetFile, targetDirectory)
 		err := t.copyFile(filename, targetFilename)
 		if err != nil {
 			return err
