@@ -7,7 +7,6 @@
    <a href="https://github.com/leaanthony/gosod/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
    <a href="https://goreportcard.com/report/github.com/leaanthony/gosod"><img src="https://goreportcard.com/badge/github.com/leaanthony/gosod"/></a>
    <a href="https://godoc.org/github.com/leaanthony/gosod"><img src="https://img.shields.io/badge/godoc-reference-blue.svg"/></a>
-   <a href="https://www.codefactor.io/repository/github/leaanthony/gosod"><img src="https://www.codefactor.io/repository/github/leaanthony/gosod/badge" alt="CodeFactor" /></a>
    <a href="https://github.com/leaanthony/gosod/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="CodeFactor" /></a>
    <a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fleaanthony%2Fgosod?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fleaanthony%2Fgosod.svg?type=shield"/></a>
 </p>
