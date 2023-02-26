@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/leaanthony/gosod"
 )
@@ -11,12 +12,10 @@ type config struct {
 }
 
 func main() {
+	fs := os.DirFS("./myTemplate")
 
 	// Define a new Template directory
-	basic, err := gosod.TemplateDir("./myTemplate")
-	if err != nil {
-		log.Fatal(err)
-	}
+	basic := gosod.New(fs)
 
 	// Register the filename to ignore
 	basic.SetTemplateFilters([]string{".template", ".tmpl"})
@@ -27,7 +26,7 @@ func main() {
 	}
 
 	// Create a new directory using the template and config
-	err = basic.Extract("./generated", myConfig)
+	err := basic.Extract("./generated", myConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
