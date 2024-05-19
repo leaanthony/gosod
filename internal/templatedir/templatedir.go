@@ -1,6 +1,7 @@
 package templatedir
 
 import (
+	"bytes"
 	"io"
 	"io/fs"
 	"log"
@@ -85,7 +86,7 @@ func (t *TemplateDir) processTemplateDirFiles(targetDirectory string, data inter
 	}
 
 	// Create all directories
-	err = t.createDirectories(targetDirectory)
+	err = t.createDirectories(targetDirectory, data)
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func (t *TemplateDir) processTemplateDirFiles(targetDirectory string, data inter
 	}
 
 	// Copy files
-	err = t.copyFiles(targetDirectory)
+	err = t.copyFiles(targetDirectory, data)
 	if err != nil {
 		return err
 	}
@@ -147,16 +148,36 @@ func (t *TemplateDir) categoriseFile(path string, info fs.DirEntry, err error) e
 	return nil
 }
 
-func (t *TemplateDir) convertPathTarget(path string, targetDirectory string) string {
-	return filepath.Join(targetDirectory, path)
+func (t *TemplateDir) convertPathTarget(path string, targetDirectory string, data any) string {
+
+	result := filepath.Join(targetDirectory, path)
+	if data == nil {
+		return result
+	}
+
+	// Load the filename as a template
+	tmpl, err := template.New("filename").Parse(result)
+	if err != nil {
+		return result
+	}
+
+	// Execute the template
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	if err != nil {
+		return result
+	}
+
+	// Return the result
+	return buf.String()
 }
 
-func (t *TemplateDir) createDirectories(targetDirectory string) error {
+func (t *TemplateDir) createDirectories(targetDirectory string, data any) error {
 
 	// Iterate all directories and attempt to create them
 	for _, dirPath := range t.dirs {
 
-		targetDir := t.convertPathTarget(dirPath, targetDirectory)
+		targetDir := t.convertPathTarget(dirPath, targetDirectory, data)
 
 		// Create the directory
 		err := os.MkdirAll(targetDir, 0755)
@@ -182,7 +203,7 @@ func (t *TemplateDir) processTemplateDirs(targetDirectory string, data interface
 		}
 
 		// Convert path to target path
-		targetFile := t.convertPathTarget(templateFile, targetDirectory)
+		targetFile := t.convertPathTarget(templateFile, targetDirectory, data)
 
 		// update filename
 		baseDir := filepath.Dir(targetFile)
@@ -220,7 +241,7 @@ func (t *TemplateDir) processTemplateDirs(targetDirectory string, data interface
 	return nil
 }
 
-func (t *TemplateDir) copyFiles(targetDirectory string) error {
+func (t *TemplateDir) copyFiles(targetDirectory string, data any) error {
 
 	// Iterate over files
 	for _, filename := range t.standardFiles {
@@ -230,7 +251,7 @@ func (t *TemplateDir) copyFiles(targetDirectory string) error {
 			targetFile = renamedFile
 		}
 
-		targetFilename := t.convertPathTarget(targetFile, targetDirectory)
+		targetFilename := t.convertPathTarget(targetFile, targetDirectory, data)
 		err := t.copyFile(filename, targetFilename)
 		if err != nil {
 			return err
